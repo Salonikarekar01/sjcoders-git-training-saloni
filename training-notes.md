@@ -14,3 +14,18 @@ GitHub is a cloud-based platform used to host Git repositories and collaborate o
 
 ```bash
 git status
+
+## Additional Learning
+
+### Basic Git Workflow
+
+The basic Git workflow involves:
+
+1. Checking the status of changes using `git status`.
+2. Staging changes using `git add`.
+3. Creating a snapshot using `git commit`.
+4. Uploading commits to GitHub using `git push`.
+
+### Branch and Pull Request Workflow
+
+A separate branch can be created to work on changes without directly modifying the `main` branch. After completing the changes, a Pull Request can be created to merge the branch into `main`.
