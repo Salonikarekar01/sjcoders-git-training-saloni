@@ -24,7 +24,7 @@ import com.sjcoders.training.entity.Employee;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 
-@CrossOrigin(origins = "http://localhost:5174")
+@CrossOrigin(origins = "http://localhost:5173")
 
 @RestController
 @RequestMapping("/employee")
