@@ -1,0 +1,14 @@
+# Sensitive configuration
+backend/src/main/resources/application.properties
+
+# Build files
+backend/target/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+
+# Java compiled files
+*.class
