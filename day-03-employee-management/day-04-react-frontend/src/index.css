@@ -66,3 +66,19 @@ th {
   background: #333;
   color: white;
 }
+
+.error-message {
+  background: #fdecea;
+  color: #b3261e;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.success-message {
+  background: #eaf7ea;
+  color: #1e7d34;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}

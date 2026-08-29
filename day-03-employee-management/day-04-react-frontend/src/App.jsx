@@ -1,35 +1,50 @@
 import { useEffect, useState } from "react";
 import "./index.css";
+import EmployeeForm from "./components/EmployeeForm";
+import EmployeeSearch from "./components/EmployeeSearch";
+import EmployeeList from "./components/EmployeeList";
+import {
+  fetchEmployees,
+  addEmployee,
+  updateEmployee,
+  deleteEmployee,
+} from "./services/employeeService";
 
-const API_URL = "http://localhost:8080/employee";
+const emptyForm = {
+  employeeCode: "",
+  fullName: "",
+  email: "",
+  phone: "",
+  department: "",
+  role: "",
+  status: "ACTIVE",
+};
 
 function App() {
   const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState(emptyForm);
 
-  const [form, setForm] = useState({
-    employeeCode: "",
-    fullName: "",
-    email: "",
-    phone: "",
-    department: "",
-    role: "",
-    status: "ACTIVE",
-  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
-  const fetchEmployees = async () => {
+  const loadEmployees = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch(API_URL);
-      const data = await response.json();
+      const data = await fetchEmployees();
       setEmployees(data);
-    } catch (error) {
-      console.error("Error fetching employees:", error);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchEmployees();
+    loadEmployees();
   }, []);
 
   const handleChange = (e) => {
@@ -40,45 +55,28 @@ function App() {
   };
 
   const resetForm = () => {
-    setForm({
-      employeeCode: "",
-      fullName: "",
-      email: "",
-      phone: "",
-      department: "",
-      role: "",
-      status: "ACTIVE",
-    });
-
+    setForm(emptyForm);
     setEditingId(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
 
     try {
       if (editingId) {
-        await fetch(`${API_URL}/${editingId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(form),
-        });
+        await updateEmployee(editingId, form);
+        setSuccessMessage("Employee updated successfully.");
       } else {
-        await fetch(`${API_URL}/add`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(form),
-        });
+        await addEmployee(form);
+        setSuccessMessage("Employee added successfully.");
       }
 
       resetForm();
-      fetchEmployees();
-    } catch (error) {
-      console.error("Error saving employee:", error);
+      loadEmployees();
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -95,27 +93,24 @@ function App() {
       status: employee.status,
     });
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDelete = async (id) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this employee?"
     );
-
     if (!confirmed) return;
 
-    try {
-      await fetch(`${API_URL}/${id}`, {
-        method: "DELETE",
-      });
+    setError(null);
+    setSuccessMessage(null);
 
-      fetchEmployees();
-    } catch (error) {
-      console.error("Error deleting employee:", error);
+    try {
+      await deleteEmployee(id);
+      setSuccessMessage("Employee deleted successfully.");
+      loadEmployees();
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -130,132 +125,32 @@ function App() {
     <div className="container">
       <h1>Employee Management</h1>
 
-      <form onSubmit={handleSubmit}>
-        <h2>{editingId ? "Edit Employee" : "Add Employee"}</h2>
+      {error && <p className="error-message">{error}</p>}
+      {successMessage && <p className="success-message">{successMessage}</p>}
 
-        <div className="form-grid">
-          <input
-            name="employeeCode"
-            placeholder="Employee Code"
-            value={form.employeeCode}
-            onChange={handleChange}
-            required
-          />
+      <EmployeeForm
+        form={form}
+        editingId={editingId}
+        onChange={handleChange}
+        onSubmit={handleSubmit}
+        onCancel={resetForm}
+      />
 
-          <input
-            name="fullName"
-            placeholder="Full Name"
-            value={form.fullName}
-            onChange={handleChange}
-            required
-          />
+      <EmployeeSearch
+        search={search}
+        onSearchChange={setSearch}
+        onRefresh={loadEmployees}
+      />
 
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            name="phone"
-            placeholder="Phone"
-            value={form.phone}
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            name="department"
-            placeholder="Department"
-            value={form.department}
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            name="role"
-            placeholder="Role"
-            value={form.role}
-            onChange={handleChange}
-            required
-          />
-
-          <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-          >
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
-          </select>
-        </div>
-
-        <button type="submit">
-          {editingId ? "Update Employee" : "Add Employee"}
-        </button>
-
-        {editingId && (
-          <button type="button" onClick={resetForm}>
-            Cancel
-          </button>
-        )}
-      </form>
-
-      <div className="search-section">
-        <input
-          placeholder="Search employees..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+      {loading ? (
+        <p>Loading employees...</p>
+      ) : (
+        <EmployeeList
+          employees={filteredEmployees}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
-
-        <button onClick={fetchEmployees}>
-          Refresh Employees
-        </button>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Employee Code</th>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Department</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {filteredEmployees.map((employee) => (
-            <tr key={employee.id}>
-              <td>{employee.id}</td>
-              <td>{employee.employeeCode}</td>
-              <td>{employee.fullName}</td>
-              <td>{employee.email}</td>
-              <td>{employee.phone}</td>
-              <td>{employee.department}</td>
-              <td>{employee.role}</td>
-              <td>{employee.status}</td>
-
-              <td>
-                <button onClick={() => handleEdit(employee)}>
-                  Edit
-                </button>
-
-                <button onClick={() => handleDelete(employee.id)}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      )}
     </div>
   );
 }
