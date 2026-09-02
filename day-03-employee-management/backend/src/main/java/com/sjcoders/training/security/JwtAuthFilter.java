@@ -41,6 +41,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             userEmail = jwtService.extractUsername(jwt);
         } catch (Exception e) {
+
+            System.out.println("JWT VALIDATION FAILED: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             filterChain.doFilter(request, response);
             return;
         }
@@ -55,6 +57,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+            } else {
+
+                System.out.println("JWT VALID SYNTAX BUT isTokenValid()=false for user: " + userEmail);
             }
         }
 
