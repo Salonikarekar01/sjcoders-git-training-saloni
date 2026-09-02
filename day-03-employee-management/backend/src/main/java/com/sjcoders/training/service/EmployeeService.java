@@ -4,11 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.sjcoders.training.entity.Employee;
+import com.sjcoders.training.exception.ResourceNotFoundException;
 import com.sjcoders.training.model.EmployeeAddRequest;
 import com.sjcoders.training.repository.EmployeeRepository;
 import java.util.List;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class EmployeeService {
@@ -38,16 +37,14 @@ public class EmployeeService {
     public Employee getEmployeeById(Long id) {
 
         return employeeRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
     }
 
     public Employee updateEmployee(Long id, EmployeeAddRequest request) {
 
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
         employee.setEmployeeCode(request.getEmployeeCode());
         employee.setFullName(request.getFullName());
@@ -63,7 +60,7 @@ public class EmployeeService {
     public void deleteEmployee(Long id) {
 
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
         employeeRepository.delete(employee);
     }
